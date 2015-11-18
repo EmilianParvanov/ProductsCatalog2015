@@ -123,13 +123,10 @@ namespace ProductsCatalog2015
 
             DataView dvZakuski = Getdata();
            
-            //GridVwPagingSorting.PageIndex = 0;
-            //GridViewPageEventArgs ea = new GridViewPageEventArgs(GridVwPagingSorting.PageIndex);
-            //GridVwPagingSorting.PageIndex = ea.NewPageIndex;
             GridVwPagingSorting.DataSource = dvZakuski;
             GridVwPagingSorting.DataBind();
         }
-
+        //delete conventional
         protected void GridView1_RowDeleting(object sender, GridViewDeleteEventArgs e)
         {
             GridViewRow row = (GridViewRow)GridVwPagingSorting.Rows[e.RowIndex];
@@ -144,6 +141,44 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataBind();
 
             conn.Close();
+        }
+        //delete with jQuery
+        protected void lnkdelete_Click(object sender, EventArgs e)
+        {
+
+            LinkButton lnkbtn = sender as LinkButton;
+            //getting particular row linkbutton
+            GridViewRow gvrow = lnkbtn.NamingContainer as GridViewRow;
+            //getting userid of particular row
+            int zakuskaId = Convert.ToInt32(GridVwPagingSorting.DataKeys[gvrow.RowIndex].Value.ToString());
+            string username = gvrow.Cells[1].Text;
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ToString());
+            conn.Open();
+            SqlCommand cmd = new SqlCommand("delete FROM Product where id='" + zakuskaId + "'", conn);
+            int result = cmd.ExecuteNonQuery();
+            conn.Close();
+            if (result == 1)
+            {
+                DataView dvZakuski = Getdata();
+                GridVwPagingSorting.DataSource = dvZakuski;
+                GridVwPagingSorting.DataBind();
+                //Displaying alert message after successfully deletion of user
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "alertmessage", "javascript:alert('" + username + "  deleted successfully')", true);
+            }
+        }
+
+        protected void GridVwPagingSorting_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                //getting username from particular row
+                string prodName = Convert.ToString(DataBinder.Eval(e.Row.DataItem, "name"));
+                //identifying the control in gridview
+                LinkButton lnkbtnresult = (LinkButton)e.Row.FindControl("lnkdelete");
+
+                //raising javascript confirmationbox whenver user clicks on link button
+                lnkbtnresult.Attributes.Add("onclick", "javascript:return ConfirmationBox('" + prodName + "')");
+            }
         }
 
         protected void GridView1_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
