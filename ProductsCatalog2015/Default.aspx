@@ -3,25 +3,20 @@
 
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
-    
-            <script src="Scripts/jquery-1.10.2.intellisense.js"></script>
-            <script src="Scripts/jquery-1.10.2.min.js"></script>
-            <script src="Scripts/jquery-1.10.2.js">
-                    function ConfirmationBox(prodName) {
 
-                        var result = confirm('Are you sure you want to delete '+ prodName +' Details' );
-                        if (result) {
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    }
+    <script type="text/javascript">
+        function ConfirmationBox(prodName) {
 
-            </script>
+            var result = confirm('Are you sure you want to delete ' + prodName + ' ???');
+            if (result) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
 
-    
-
+    </script>
 
     <br />
     <asp:GridView runat="server" ID="gridViewProducts" ItemType="Models.ProductsDBModel.Product" AllowPaging="true"
