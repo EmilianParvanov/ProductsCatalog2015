@@ -10,7 +10,7 @@
             var result = confirm('Are you sure you want to delete ' + prodName + ' ???');
             if (result) {
                 return true;
-            }
+            }//
             else {
                 return false;
             }
