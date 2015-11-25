@@ -12,10 +12,11 @@ using System.Web.UI.WebControls;
 
 namespace ProductsCatalog2015
 {
+
     public partial class _Default : Page
     {
-
         Entities context = new Entities();
+        string Sort_Direction = "name ASC";
 
         protected void Page_PreRender(object sender, EventArgs e)
         {
@@ -30,12 +31,11 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataBind();
         }
 
-        string Sort_Direction = "name ASC";
-
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
+                //original, conventional GV
                 var products = context.Products.OrderBy(x => x.id);
                 GridVwPagingSorting.DataSource = products.ToList();
                 GridVwPagingSorting.DataBind();
@@ -45,8 +45,23 @@ namespace ProductsCatalog2015
                 GridVwPagingSorting.DataSource = dvZakuski;
                 GridVwPagingSorting.DataBind();
 
-                AddNewZakuskaGrid();
+                //AddNewZakuskaGrid();
+
+                //jquery ajax GV
+                this.BindDummyRow();
+                InvokeNewZakuskaInputFieldsView.Visible = false;
             }
+        }
+
+        private void BindDummyRow()
+        {
+            DataTable dummy = new DataTable();
+            dummy.Columns.Add("id");
+            dummy.Columns.Add("name");
+            dummy.Columns.Add("price");
+            dummy.Rows.Add();
+            gvProducts.DataSource = dummy;
+            gvProducts.DataBind();
         }
      
         private DataView Getdata()
@@ -93,7 +108,6 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataBind();
         }
 
-
         protected void GridView1_RowEditing(object sender, GridViewEditEventArgs e)
         {
             GridVwPagingSorting.EditIndex = e.NewEditIndex;
@@ -127,6 +141,7 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataSource = dvZakuski;
             GridVwPagingSorting.DataBind();
         }
+
         //delete conventional
         protected void GridView1_RowDeleting(object sender, GridViewDeleteEventArgs e)
         {
@@ -143,44 +158,6 @@ namespace ProductsCatalog2015
 
             conn.Close();
         }
-        //delete with jQuery
-        protected void lnkdelete_Click(object sender, EventArgs e)
-        {
-
-            LinkButton lnkbtn = sender as LinkButton;
-            //getting particular row linkbutton
-            GridViewRow gvrow = lnkbtn.NamingContainer as GridViewRow;
-            //getting userid of particular row
-            int zakuskaId = Convert.ToInt32(GridVwPagingSorting.DataKeys[gvrow.RowIndex].Value.ToString());
-            string username = gvrow.Cells[1].Text;
-            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ToString());
-            conn.Open();
-            SqlCommand cmd = new SqlCommand("delete FROM Product where id='" + zakuskaId + "'", conn);
-            int result = cmd.ExecuteNonQuery();
-            conn.Close();
-            if (result == 1)
-            {
-                DataView dvZakuski = Getdata();
-                GridVwPagingSorting.DataSource = dvZakuski;
-                GridVwPagingSorting.DataBind();
-                //Displaying alert message after successfully deletion of user
-                ScriptManager.RegisterStartupScript(this, this.GetType(), "alertmessage", "javascript:alert('" + username + "  deleted successfully')", true);
-            }
-        }
-
-        protected void GridVwPagingSorting_RowDataBound(object sender, GridViewRowEventArgs e)
-        {
-            if (e.Row.RowType == DataControlRowType.DataRow)
-            {
-                //getting username from particular row
-                string prodName = Convert.ToString(DataBinder.Eval(e.Row.DataItem, "name"));
-                //identifying the control in gridview
-                LinkButton lnkbtnresult = (LinkButton)e.Row.FindControl("lnkdelete");
-
-                //raising javascript confirmationbox whenver user clicks on link button
-                lnkbtnresult.Attributes.Add("onclick", "javascript:return ConfirmationBox('" + prodName + "')");
-            }
-        }
 
         protected void GridView1_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
         {
@@ -189,13 +166,13 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataSource = dvZakuski;
             GridVwPagingSorting.DataBind();
         }
-
-        
+        /*
         protected void InvokeNewZakuskaView(object sender, EventArgs e)
         {
             addNewZakuskaGrid.Visible = true;
         }
-
+        */
+/*
         protected void AddNewZakuska(object sender, EventArgs e)
         {
             GridViewRow row = (GridViewRow)addNewZakuskaGrid.Rows[0];
@@ -216,7 +193,8 @@ namespace ProductsCatalog2015
             txtBox.Text = string.Empty;
             txtPrice.Text = string.Empty;
         }
-
+        */
+        /*
         private void AddNewZakuskaGrid()
         {
             DataTable dt = new DataTable();
@@ -244,6 +222,98 @@ namespace ProductsCatalog2015
             TextBox txtPrice = row.FindControl("txtPrice") as TextBox;
             txtBox.Text = string.Empty;
             txtPrice.Text = string.Empty;
+        }
+        */
+
+        //1st jQueryAJAX try
+
+        protected void InvokeNewZakuskaInputFieldsBtnFunc(object sender, EventArgs e)
+        {
+            InvokeNewZakuskaInputFieldsView.Visible = true;
+        }
+
+        protected void CancelNewZakuska(object sender, EventArgs e)
+        {
+            InvokeNewZakuskaInputFieldsView.Visible = false;
+
+            txtName.Text = string.Empty;
+            txtPrice.Text = string.Empty;
+        }
+
+        [WebMethod]
+        public static string GetProducts()
+        {
+            string query = "select id, name, convert(decimal(10,2),price) as price from product";
+            SqlCommand cmd = new SqlCommand(query);
+            string constr = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+            using (SqlConnection con = new SqlConnection(constr))
+            {
+                using (SqlDataAdapter sda = new SqlDataAdapter())
+                {
+                    cmd.Connection = con;
+                    sda.SelectCommand = cmd;
+                    using (DataSet ds = new DataSet())
+                    {
+                        sda.Fill(ds);
+                        return ds.GetXml();
+                    }
+                }
+            }
+        }
+
+        [WebMethod]
+        public static void DeleteProduct(int id)
+        {
+            string constr = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+            using (SqlConnection con = new SqlConnection(constr))
+            {
+                using (SqlCommand cmd = new SqlCommand("delete FROM product WHERE id = @id"))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Connection = con;
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                }
+            }
+        }
+        
+        [WebMethod]
+        public static void UpdateProduct(int id, string name, string price)
+        {
+            string constr = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+            using (SqlConnection con = new SqlConnection(constr))
+            {
+                using (SqlCommand cmd = new SqlCommand("update product SET name = @name, price = @price WHERE id = @id"))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Parameters.AddWithValue("@name", name);
+                    cmd.Parameters.AddWithValue("@price", price);
+                    cmd.Connection = con;
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                }
+            }
+        }
+
+        [WebMethod]
+        public static int InsertProduct(string name, string price)
+        {
+            string constr = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+            using (SqlConnection con = new SqlConnection(constr))
+            {
+                using (SqlCommand cmd = new SqlCommand("INSERT INTO Product (name, price) VALUES (@name, @price) SELECT SCOPE_IDENTITY()"))
+                {
+                    cmd.Parameters.AddWithValue("@name", name);
+                    cmd.Parameters.AddWithValue("@price", price);
+                    cmd.Connection = con;
+                    con.Open();
+                    int id = Convert.ToInt32(cmd.ExecuteScalar());
+                    con.Close();
+                    return id;
+                }
+            }
         }
     }
 }
