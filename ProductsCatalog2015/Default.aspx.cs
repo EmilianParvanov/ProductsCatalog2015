@@ -30,7 +30,8 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataSource = dvEmployee;
             GridVwPagingSorting.DataBind();
         }
-
+        
+        private static int PageSize = 10;
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -46,6 +47,7 @@ namespace ProductsCatalog2015
                 GridVwPagingSorting.DataBind();
 
                 //AddNewZakuskaGrid();
+
 
                 //jquery ajax GV
                 this.BindDummyRow();
@@ -77,7 +79,7 @@ namespace ProductsCatalog2015
                 return dvEmp;
             }
         }
-
+        
         protected void PageIndexChanging(object sender, GridViewPageEventArgs e)
         {
             GridVwPagingSorting.PageIndex = e.NewPageIndex;
@@ -85,7 +87,7 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataSource = dvEmployee;
             GridVwPagingSorting.DataBind();
         }
-
+      
         protected void Sorting(object sender, GridViewSortEventArgs e)
         {
             string[] SortOrder = ViewState["SortExpr"].ToString().Split(' ');
@@ -142,7 +144,6 @@ namespace ProductsCatalog2015
             GridVwPagingSorting.DataBind();
         }
 
-        //delete conventional
         protected void GridView1_RowDeleting(object sender, GridViewDeleteEventArgs e)
         {
             GridViewRow row = (GridViewRow)GridVwPagingSorting.Rows[e.RowIndex];
@@ -241,12 +242,21 @@ namespace ProductsCatalog2015
         }
 
         [WebMethod]
-        public static string GetProducts()
+        public static string FetchProducts(int pageIndex)
         {
-            string query = "select id, name, convert(decimal(10,2),price) as price from product";
+            string query = "[GetProductsWithPaging]";
             SqlCommand cmd = new SqlCommand(query);
-            string constr = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
-            using (SqlConnection con = new SqlConnection(constr))
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@PageIndex", pageIndex);
+            cmd.Parameters.AddWithValue("@PageSize", PageSize);
+            cmd.Parameters.Add("@RecordCount", SqlDbType.Int, 4).Direction = ParameterDirection.Output;
+            return GetData(cmd, pageIndex).GetXml();
+        }
+
+        private static DataSet GetData(SqlCommand cmd, int pageIndex)
+        {
+            string strConnString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+            using (SqlConnection con = new SqlConnection(strConnString))
             {
                 using (SqlDataAdapter sda = new SqlDataAdapter())
                 {
@@ -254,8 +264,17 @@ namespace ProductsCatalog2015
                     sda.SelectCommand = cmd;
                     using (DataSet ds = new DataSet())
                     {
-                        sda.Fill(ds);
-                        return ds.GetXml();
+                        sda.Fill(ds, "product");
+                        DataTable dt = new DataTable("Pager");
+                        dt.Columns.Add("PageIndex");
+                        dt.Columns.Add("PageSize");
+                        dt.Columns.Add("RecordCount");
+                        dt.Rows.Add();
+                        dt.Rows[0]["PageIndex"] = pageIndex;
+                        dt.Rows[0]["PageSize"] = PageSize;
+                        dt.Rows[0]["RecordCount"] = cmd.Parameters["@RecordCount"].Value;
+                        ds.Tables.Add(dt);
+                        return ds;
                     }
                 }
             }

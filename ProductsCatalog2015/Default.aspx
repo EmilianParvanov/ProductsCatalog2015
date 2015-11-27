@@ -3,31 +3,85 @@
 
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
+    <style type="text/css">
+        .Pager span
+        {
+            text-align: center;
+            color: #999;
+            display: inline-block;
+            width: 20px;
+            background-color: #A1DCF2;
+            margin-right: 3px;
+            line-height: 150%;
+            border: 1px solid #3AC0F2;
+        }
+        .Pager a
+        {
+            text-align: center;
+            display: inline-block;
+            width: 20px;
+            background-color: #3AC0F2;
+            color: #fff;
+            border: 1px solid #3AC0F2;
+            margin-right: 3px;
+            line-height: 150%;
+            text-decoration: none;
+        }
+    </style>
     
+    <!--Populate the GV-->
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="Scripts/ASPSnippets_Pager.min.js" type="text/javascript"></script>
     <script type="text/javascript">
+    
         $(function () {
+            GetCustomers(1);
+        });
+        var pind = 1;
+        $(".Pager .page").live("click", function () {
+            debugger;
+            pind = parseInt($(this).attr('page'))
+            //window.pind = pind;
+            GetCustomers(parseInt($(this).attr('page')));
+        });
+        function GetCustomers(pageIndex) {
             $.ajax({
                 type: "POST",
-                url:'<%= ResolveUrl("Default.aspx/GetProducts") %>',
-                data: '{}',
+                url: '<%= ResolveUrl("Default.aspx/FetchProducts") %>',
+                data: '{pageIndex: ' + pageIndex + '}',
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                success: OnSuccess
+                success: OnSuccess,
+                failure: function (response) {
+                    alert(response.d);
+                },
+                error: function (response) {
+                    alert(response.d);
+                }
             });
-        });
+        }
 
         function OnSuccess(response) {
             var xmlDoc = $.parseXML(response.d);
             var xml = $(xmlDoc);
-            var products = xml.find("Table");
+            var products = xml.find("product");
             var row = $("[id*=gvProducts] tr:last-child").clone(true);
             $("[id*=gvProducts] tr").not($("[id*=gvProducts] tr:first-child")).remove();
             $.each(products, function () {
                 var product = $(this);
-                AppendRow(row, $(this).find("id").text(), $(this).find("name").text(), $(this).find("price").text())
+                AppendRow(row, $(this).find("id").text(), $(this).find("name").text(), $(this).find("price").text())//neue
                 row = $("[id*=gvProducts] tr:last-child").clone(true);
             });
-        }
+            var pager = xml.find("Pager");
+            $(".Pager").ASPSnippets_Pager({
+                ActiveCssClass: "current",
+                PagerCssClass: "Pager",
+                PageIndex: parseInt(pager.find("PageIndex").text()),
+                PageSize: parseInt(pager.find("PageSize").text()),
+                RecordCount: parseInt(pager.find("RecordCount").text())
+            });
+        };
+
         function AppendRow(row, id, name, price) {
             $(".id", row).find("span").html(id);
             //non-editable
@@ -40,9 +94,10 @@
         }
     </script>
 
+    <!--delete from GV-->
     <script type="text/javascript">
         $("body").on("click", "[id*=gvProducts] .Delete", function () {
-            if (confirm("Are you sure?")) {
+            if(confirm("Are you sure?")) {
                 var row = $(this).closest("tr");
                 var id = row.find("span").html();
                 $.ajax({
@@ -53,14 +108,16 @@
                     dataType: "json",
                     success: function (response) {
                         row.remove();
+                        GetCustomers(pind);
                     }
+
                 });
             }
-
             return false;
         });
     </script>
     
+    <!--edit,update,delete button relations-->
     <script type="text/javascript">
         $("body").on("click", "[id*=gvProducts] .Edit", function () {
             var row = $(this).closest("tr");
@@ -78,8 +135,8 @@
         });
     </script>
 
+    <!--Updating product-->
     <script type="text/javascript">
-        //Update.
         $("body").on("click", "[id*=gvProducts] .Update", function () {
             var row = $(this).closest("tr");
             $("td", row).each(function () {
@@ -111,6 +168,7 @@
         });
     </script>
 
+    <!--Add Clean actions-->
     <script type="text/javascript">
         $("body").on("click", "[id*=btnAdd]", function () {
             //debugger;
@@ -131,9 +189,6 @@
             });
             return false;
         });
-    </script>
-
-    <script type="text/javascript">
         $("body").on("click", "[id*=btnClean]", function Clean() {
             var txtName = $("[id*=txtName]");
             var txtPrice = $("[id*=txtPrice]");
@@ -141,9 +196,8 @@
             txtPrice.val("");
 
             return false;
-            });
+        });
     </script>
-
 
     <br />
 
@@ -193,11 +247,9 @@
    
     <br />
     
-    <asp:GridView ID="GridVwPagingSorting" runat="server" AutoGenerateColumns="False" DataKeyNames="id"
-        Font-Names="Verdana" AllowPaging="True" AllowSorting="True" PageSize="5" Width="75%"
-        OnPageIndexChanging="PageIndexChanging" OnSorting="Sorting"
-        OnRowCancelingEdit="GridView1_RowCancelingEdit" OnRowDeleting="GridView1_RowDeleting"
-        OnRowEditing="GridView1_RowEditing" OnRowUpdating="GridView1_RowUpdating">
+    <asp:GridView ID="GridVwPagingSorting" runat="server" AutoGenerateColumns="False" DataKeyNames="id" Font-Names="Verdana" AllowPaging="True"
+        AllowSorting="True" PageSize="5" Width="75%" OnPageIndexChanging="PageIndexChanging" OnSorting="Sorting" OnRowCancelingEdit="GridView1_RowCancelingEdit"
+        OnRowDeleting="GridView1_RowDeleting" OnRowEditing="GridView1_RowEditing" OnRowUpdating="GridView1_RowUpdating">
         <Columns>
             <asp:BoundField DataField="id" HeaderText="id" SortExpression="id" />
             <asp:BoundField DataField="name" HeaderText="name" SortExpression="name" />
@@ -238,5 +290,7 @@
             </asp:TemplateField>
         </Columns>
     </asp:GridView>
+    <br />
+    <div class="Pager"></div>
 
 </asp:Content>
