@@ -76,24 +76,6 @@ namespace ProductsCatalog2015 {
         protected global::System.Web.UI.WebControls.Button btnCancel;
         
         /// <summary>
-        /// gridViewProducts control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView gridViewProducts;
-        
-        /// <summary>
-        /// GridVwPagingSorting control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView GridVwPagingSorting;
-        
-        /// <summary>
         /// gvProducts control.
         /// </summary>
         /// <remarks>

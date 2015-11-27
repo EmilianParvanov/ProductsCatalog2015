@@ -37,12 +37,14 @@
         $(function () {
             GetCustomers(1);
         });
+        //a bit of "global" vars
         var pind = 1;
+        var reccnt = 1;
+
         $(".Pager .page").live("click", function () {
             debugger;
             pind = parseInt($(this).attr('page'))
-            //window.pind = pind;
-            GetCustomers(parseInt($(this).attr('page')));
+            GetCustomers(pind);
         });
         function GetCustomers(pageIndex) {
             $.ajax({
@@ -80,6 +82,7 @@
                 PageSize: parseInt(pager.find("PageSize").text()),
                 RecordCount: parseInt(pager.find("RecordCount").text())
             });
+            reccnt = parseInt(pager.find("RecordCount").text())
         };
 
         function AppendRow(row, id, name, price) {
@@ -185,6 +188,8 @@
                     AppendRow(row, response.d, txtName.val(), txtPrice.val());
                     txtName.val("");
                     txtPrice.val("");
+                    var lpind = (reccnt / 10 >> 0) + 1
+                    GetCustomers(lpind);//MUST go to last page!?!
                 }
             });
             return false;
@@ -197,6 +202,16 @@
 
             return false;
         });
+    </script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("th").click(function () {
+                debugger;
+                var columnIndex = $(this).index();
+
+            });
+        })
     </script>
 
     <br />
@@ -232,33 +247,7 @@
             </tr>
         </table>
     </div>
-
-
-    <asp:GridView runat="server" ID="gridViewProducts" ItemType="Models.ProductsDBModel.Product" AllowPaging="true"
-         AllowSorting="true" PageSize="3" OnPageIndexChanging="gridViewProducts_PageIndexChanging" OnSorting="Sorting">   
-
-        <Columns>
-      <%--      <asp:BoundField DataField="id" HeaderText="id" />
-            <asp:BoundField DataField="Name" HeaderText="Name" />
-            <asp:BoundField DataField="Price" HeaderText="Price" />--%>
-        </Columns>
-
-    </asp:GridView>
-   
-    <br />
-    
-    <asp:GridView ID="GridVwPagingSorting" runat="server" AutoGenerateColumns="False" DataKeyNames="id" Font-Names="Verdana" AllowPaging="True"
-        AllowSorting="True" PageSize="5" Width="75%" OnPageIndexChanging="PageIndexChanging" OnSorting="Sorting" OnRowCancelingEdit="GridView1_RowCancelingEdit"
-        OnRowDeleting="GridView1_RowDeleting" OnRowEditing="GridView1_RowEditing" OnRowUpdating="GridView1_RowUpdating">
-        <Columns>
-            <asp:BoundField DataField="id" HeaderText="id" SortExpression="id" />
-            <asp:BoundField DataField="name" HeaderText="name" SortExpression="name" />
-            <asp:BoundField DataField="price" HeaderText="price" SortExpression="price" DataFormatString="{0:F}" />
-            <asp:CommandField ShowEditButton="true" />
-            <asp:CommandField ShowDeleteButton="true" />
-        </Columns>
-    </asp:GridView>
-
+  
     <br />
 
     <asp:GridView ID="gvProducts" runat="server" AutoGenerateColumns="false">
@@ -276,8 +265,8 @@
             </asp:TemplateField>
             <asp:TemplateField HeaderText="price" ItemStyle-Width="150px" ItemStyle-CssClass="price">
                 <ItemTemplate>
-                    <asp:Label Text='<# Eval("price") %>' runat="server" />
-                    <asp:TextBox Text='<# Eval("price") %>' runat="server" Style="display: none" />
+                    <asp:Label Text='<%# Eval("price") %>' runat="server" />
+                    <asp:TextBox Text='<%# Eval("price") %>' runat="server" Style="display: none" />
                 </ItemTemplate>
             </asp:TemplateField>
             <asp:TemplateField>
