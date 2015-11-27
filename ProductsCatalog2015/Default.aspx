@@ -33,24 +33,27 @@
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     <script src="Scripts/ASPSnippets_Pager.min.js" type="text/javascript"></script>
     <script type="text/javascript">
-    
-        $(function () {
-            GetCustomers(1);
-        });
-        //a bit of "global" vars
+            //a bit of "global" vars
         var pind = 1;
         var reccnt = 1;
+        var sortexpr = 0;
+
+        $(function () {
+            GetCustomers(1, sortexpr);
+        });
+
 
         $(".Pager .page").live("click", function () {
             debugger;
             pind = parseInt($(this).attr('page'))
-            GetCustomers(pind);
+            GetCustomers(pind, sortexpr);
         });
-        function GetCustomers(pageIndex) {
+        function GetCustomers(pageIndex, sortExpr) {
             $.ajax({
                 type: "POST",
                 url: '<%= ResolveUrl("Default.aspx/FetchProducts") %>',
-                data: '{pageIndex: ' + pageIndex + '}',
+//              data: '{pageIndex: ' + pageIndex + '}',
+                data: '{pageIndex: ' + pageIndex + ', sortExpr: ' + sortExpr + '}',
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: OnSuccess,
@@ -111,7 +114,7 @@
                     dataType: "json",
                     success: function (response) {
                         row.remove();
-                        GetCustomers(pind);
+                        GetCustomers(pind, sortexpr);
                     }
 
                 });
@@ -189,7 +192,7 @@
                     txtName.val("");
                     txtPrice.val("");
                     var lpind = (reccnt / 10 >> 0) + 1
-                    GetCustomers(lpind);//MUST go to last page!?!
+                    GetCustomers(lpind, sortexpr);//MUST go to last page!?!
                 }
             });
             return false;
@@ -204,11 +207,15 @@
         });
     </script>
 
+    <!--sort-->
     <script type="text/javascript">
         $(document).ready(function () {
             $("th").click(function () {
                 debugger;
                 var columnIndex = $(this).index();
+                if(columnIndex == 0){sortexpr = 0; GetCustomers(pind, sortexpr);}
+                if(columnIndex == 1){sortexpr = 1; GetCustomers(pind, sortexpr);}
+                if(columnIndex == 2){sortexpr = 2; GetCustomers(pind, sortexpr);}
 
             });
         })

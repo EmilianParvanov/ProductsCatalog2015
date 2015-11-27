@@ -21,6 +21,7 @@ namespace ProductsCatalog2015
         }
         
         private static int PageSize = 10;
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -58,13 +59,14 @@ namespace ProductsCatalog2015
         }
 
         [WebMethod]
-        public static string FetchProducts(int pageIndex)
+        public static string FetchProducts(int pageIndex, int sortExpr)
         {
             string query = "[GetProductsWithPaging]";
             SqlCommand cmd = new SqlCommand(query);
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@PageIndex", pageIndex);
             cmd.Parameters.AddWithValue("@PageSize", PageSize);
+            cmd.Parameters.AddWithValue("@SortExpr", sortExpr);
             cmd.Parameters.Add("@RecordCount", SqlDbType.Int, 4).Direction = ParameterDirection.Output;
             return GetData(cmd, pageIndex).GetXml();
         }
