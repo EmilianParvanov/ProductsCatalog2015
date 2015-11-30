@@ -29,31 +29,30 @@
         }
     </style>
     
-    <!--Populate the GV-->
+    <!--Populate the GV, 1.8.3-->
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     <script src="Scripts/ASPSnippets_Pager.min.js" type="text/javascript"></script>
     <script type="text/javascript">
             //a bit of "global" vars
         var pind = 1;
         var reccnt = 1;
-        var sortexpr = 0;
+        var sortexpr = 0;//id by default
+        var sortdir = 1;//1 = asc, 0 = desc :)
 
         $(function () {
-            GetCustomers(1, sortexpr);
+            debugger;
+            GetProducts(1, sortexpr, sortdir);
         });
-
-
         $(".Pager .page").live("click", function () {
             debugger;
             pind = parseInt($(this).attr('page'))
-            GetCustomers(pind, sortexpr);
+            GetProducts(pind, sortexpr, sortdir);
         });
-        function GetCustomers(pageIndex, sortExpr) {
+        function GetProducts(pageIndex, sortExpr, sortDir) {
             $.ajax({
                 type: "POST",
                 url: '<%= ResolveUrl("Default.aspx/FetchProducts") %>',
-//              data: '{pageIndex: ' + pageIndex + '}',
-                data: '{pageIndex: ' + pageIndex + ', sortExpr: ' + sortExpr + '}',
+                data: '{pageIndex: ' + pageIndex + ', sortExpr: ' + sortExpr + ', sortDir: ' + sortDir + '}',
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: OnSuccess,
@@ -90,12 +89,13 @@
 
         function AppendRow(row, id, name, price) {
             $(".id", row).find("span").html(id);
-            //non-editable
+            //non-editable up upo upoo
             $(".name", row).find("span").html(name);
             $(".name", row).find("input").val(name);
 
             $(".price", row).find("span").html(price);
             $(".price", row).find("input").val(price);
+
             $("[id*=gvProducts]").append(row);
         }
     </script>
@@ -114,7 +114,7 @@
                     dataType: "json",
                     success: function (response) {
                         row.remove();
-                        GetCustomers(pind, sortexpr);
+                        GetProducts(pind, sortexpr, sortdir);
                     }
 
                 });
@@ -123,7 +123,7 @@
         });
     </script>
     
-    <!--edit,update,delete button relations-->
+    <!--edit,update,delete txtfields n button relations-->
     <script type="text/javascript">
         $("body").on("click", "[id*=gvProducts] .Edit", function () {
             var row = $(this).closest("tr");
@@ -177,7 +177,6 @@
     <!--Add Clean actions-->
     <script type="text/javascript">
         $("body").on("click", "[id*=btnAdd]", function () {
-            //debugger;
             var txtName = $("[id*=txtName]");
             var txtPrice = $("[id*=txtPrice]");
             $.ajax({
@@ -192,7 +191,7 @@
                     txtName.val("");
                     txtPrice.val("");
                     var lpind = (reccnt / 10 >> 0) + 1
-                    GetCustomers(lpind, sortexpr);//MUST go to last page!?!
+                    GetProducts(lpind, sortexpr, sortdir);//ehooo
                 }
             });
             return false;
@@ -207,18 +206,35 @@
         });
     </script>
 
-    <!--sort-->
+    <!--sort, directions, expressions etc.-->
     <script type="text/javascript">
         $(document).ready(function () {
             $("th").click(function () {
-                debugger;
+                //debugger;
                 var columnIndex = $(this).index();
-                if(columnIndex == 0){sortexpr = 0; GetCustomers(pind, sortexpr);}
-                if(columnIndex == 1){sortexpr = 1; GetCustomers(pind, sortexpr);}
-                if(columnIndex == 2){sortexpr = 2; GetCustomers(pind, sortexpr);}
-
+                if (columnIndex == 0) {
+                    sortByExpression(0);
+                }
+                if (columnIndex == 1) {
+                    sortByExpression(1);
+                }
+                if (columnIndex == 2) {
+                    sortByExpression(2);
+                }
             });
         })
+        function sortByExpression(sortExpression) {
+            sortexpr = sortExpression;
+            if (sortdir == 1) {
+                GetProducts(pind, sortexpr, sortdir);
+                sortdir = 0;
+            }
+            else {
+                GetProducts(pind, sortexpr, sortdir);
+                sortdir = 1;
+            }
+
+        }
     </script>
 
     <br />

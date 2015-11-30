@@ -59,7 +59,7 @@ namespace ProductsCatalog2015
         }
 
         [WebMethod]
-        public static string FetchProducts(int pageIndex, int sortExpr)
+        public static string FetchProducts(int pageIndex, int sortExpr, int sortDir)
         {
             string query = "[GetProductsWithPaging]";
             SqlCommand cmd = new SqlCommand(query);
@@ -67,6 +67,7 @@ namespace ProductsCatalog2015
             cmd.Parameters.AddWithValue("@PageIndex", pageIndex);
             cmd.Parameters.AddWithValue("@PageSize", PageSize);
             cmd.Parameters.AddWithValue("@SortExpr", sortExpr);
+            cmd.Parameters.AddWithValue("@SortDir", sortDir);
             cmd.Parameters.Add("@RecordCount", SqlDbType.Int, 4).Direction = ParameterDirection.Output;
             return GetData(cmd, pageIndex).GetXml();
         }
