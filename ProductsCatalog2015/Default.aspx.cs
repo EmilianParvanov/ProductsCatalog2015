@@ -26,6 +26,10 @@ namespace ProductsCatalog2015
         {
             if (!IsPostBack)
             {
+                if (!User.Identity.IsAuthenticated)
+                {
+                    Server.Transfer("~/Account/Login.aspx");
+                }
                 //jquery ajax GV
                 this.BindDummyRow();
                 InvokeNewZakuskaInputFieldsView.Visible = false;
